@@ -6,6 +6,9 @@ public class SynthBall : MonoBehaviour
 {
     public float initialSpeed = 10f;
     public Rigidbody2D rb;
+    public OSC osc;
+
+    private OscMessage msg;
 
     // Start is called before the first frame update
     void Start()
@@ -30,18 +33,23 @@ public class SynthBall : MonoBehaviour
     private void OnCollisionEnter2D(Collision2D collision)
     {
 
-        float collisionAngle = Mathf.Atan2(collision.contacts[0].normal.y, collision.contacts[0].normal.x);
+        //float collisionAngle = Mathf.Atan2(collision.contacts[0].normal.y, collision.contacts[0].normal.x);
+        //float collisionAngleDegrees = collisionAngle * Mathf.Rad2Deg;
+        //Debug.Log("Collision Angle: " + collisionAngleDegrees);
 
-        float collisionAngleDegrees = collisionAngle * Mathf.Rad2Deg;
 
-        Debug.Log("Collision Angle: " + collisionAngleDegrees);
+        //Send collision message
+        msg = new OscMessage();
 
+        msg.address = "/collision";
+        msg.values.Add("Collision with pin");
+        osc.Send(msg);
+        Debug.Log(msg);
     }
 
 
     private void CheckVelocity()
     {
-        Debug.Log("CheckVelocity");
         // Check if the velocity magnitude is NOT 10 anymore
         if (Mathf.Abs(rb.velocity.magnitude - 10f) > 0.0001)
         {
