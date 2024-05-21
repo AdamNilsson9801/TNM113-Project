@@ -1,18 +1,25 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using OscJack;
 
 public class SynthBall : MonoBehaviour
 {
     public float initialSpeed = 10f;
     public Rigidbody2D rb;
     public OSC osc;
+    [SerializeField] string ipAddress = "127.0.0.1";
+    [SerializeField] int port = 12345;
 
+    OscClient client;
     private OscMessage msg;
 
     // Start is called before the first frame update
     void Start()
     {
+        //Set up client
+        client = new OscClient(ipAddress, port);
+
         if (rb != null)
         {
             rb.gravityScale = 0f; //No gravity
@@ -39,12 +46,16 @@ public class SynthBall : MonoBehaviour
 
 
         //Send collision message
-        msg = new OscMessage();
+        //client.Send("/[ADDRESS]", "[MESSAGE]");
+        client.Send("/collision", "test");
 
-        msg.address = "/collision";
-        msg.values.Add("Collision with pin");
-        osc.Send(msg);
-        Debug.Log(msg);
+        
+        //msg = new OscMessage();
+
+        ////msg.address = "/collision";
+        //msg.values.Add("Collision with pin");
+        //osc.Send(msg);
+        //Debug.Log(msg);
     }
 
 
