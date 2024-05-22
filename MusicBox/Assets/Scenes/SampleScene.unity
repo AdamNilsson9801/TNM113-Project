@@ -505,8 +505,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pinPrefab: {fileID: 7756421595967326433, guid: b36bedaf99d05dd4ca263a331143fb1f, type: 3}
   environment: {fileID: 1626770760}
-  numberOfPins: 200
-  distToBoundary: 1
+  numberOfPins: 250
+  distToBoundary: 0.5
 --- !u!4 &664018789
 Transform:
   m_ObjectHideFlags: 0
@@ -619,7 +619,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   initialSpeed: 10
   rb: {fileID: 907548453}
-  osc: {fileID: 919667226}
+  ipAddress: 127.0.0.1
+  port: 12345
 --- !u!212 &907548456
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -717,9 +718,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5aec44b83daad9d4eb7ebd85ffb515a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inPort: 57120
-  outIP: 127.0.0.1
-  outPort: 57120
 --- !u!4 &919667227
 Transform:
   m_ObjectHideFlags: 0

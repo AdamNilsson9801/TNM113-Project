@@ -11,6 +11,9 @@ public class SpawnPins : MonoBehaviour
     public float distToBoundary = 2f;
 
     private float minX, maxX, minY, maxY;
+    private string[] pinTypes = { "chord", "tone" };
+    private string[] majorChords = { "C", "G", "D", "A", "E", "B", "Fiss", "Ciss", "F", "Bess" };
+    private string[] minorChords = { "A", "E", "B", "Fiss", "Ciss", "Giss", "Diss", "Bess", "F", "C" };
 
     // Start is called before the first frame update
     void Start()
@@ -34,6 +37,25 @@ public class SpawnPins : MonoBehaviour
                                             Random.Range(minY, maxY));
 
             GameObject pin = Instantiate(pinPrefab, spawnPos, Quaternion.identity);
+
+            if (pin != null)
+            {
+                string randType = pinTypes[(int)Random.Range(0f, pinTypes.Length)];  
+
+                if (randType == pinTypes[0]) //if chord pin
+                {
+                    pin.GetComponent<Pin>().Initialize(spawnPos, 0.5f, Color.green, "chord");
+                    pin.GetComponent<Pin>().setColor();
+                    pin.GetComponent<Pin>().setChord(majorChords[(int)Random.Range(0, majorChords.Length)]);
+                }
+                else
+                {
+                    pin.GetComponent<Pin>().Initialize(spawnPos, 0.5f, Color.blue, "tone");
+                    pin.GetComponent<Pin>().setColor();
+                }
+
+            }
+
         }
     }
 

@@ -1,18 +1,19 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using OscJack;
+using Unity.VisualScripting;
 
 public class SynthBall : MonoBehaviour
 {
     public float initialSpeed = 10f;
     public Rigidbody2D rb;
-    public OSC osc;
+
     [SerializeField] string ipAddress = "127.0.0.1";
     [SerializeField] int port = 12345;
 
     OscClient client;
-    private OscMessage msg;
+
 
     // Start is called before the first frame update
     void Start()
@@ -43,19 +44,45 @@ public class SynthBall : MonoBehaviour
         //float collisionAngle = Mathf.Atan2(collision.contacts[0].normal.y, collision.contacts[0].normal.x);
         //float collisionAngleDegrees = collisionAngle * Mathf.Rad2Deg;
         //Debug.Log("Collision Angle: " + collisionAngleDegrees);
+        string collistionType = "wall";
+
+        if (collision.gameObject.tag == "pin")
+        {
+            collistionType = collision.gameObject.GetComponent<Pin>().type;
+
+        }
 
 
         //Send collision message
-        //client.Send("/[ADDRESS]", "[MESSAGE]");
-        client.Send("/collision", "test");
+        if (collistionType == "chord")
+        {
 
-        
-        //msg = new OscMessage();
+            // Calculate the direction vector from the contact point to the object's position
+            Vector2 direction = (collision.contacts[0].point - (Vector2)transform.position) * -1f;
+            direction.Normalize();
 
-        ////msg.address = "/collision";
-        //msg.values.Add("Collision with pin");
-        //osc.Send(msg);
-        //Debug.Log(msg);
+            // For Debugging
+            Debug.DrawLine((Vector2)transform.position, (Vector2)transform.position + direction, Color.red, 1f);
+
+            //Calculate angle from direction vector.
+            float angle = Vector2.SignedAngle(Vector2.right, direction); //gives an angle between 0 to 180 and -180 to 0.
+
+            if (angle < 0)
+            {
+                angle += 360;
+            }
+
+            string chordType = collision.gameObject.GetComponent<Pin>().getChord();
+            string msg = "chord " + chordType + " " + angle.ToString();
+
+
+            client.Send("/collision", msg); //msg = "chord A 123.123"
+        }
+        else
+        {
+            client.Send("/collision", "tone");
+        }
+
     }
 
 
