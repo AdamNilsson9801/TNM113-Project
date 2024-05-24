@@ -14,6 +14,11 @@ public class SynthBall : MonoBehaviour
 
     OscClient client;
 
+    private string[] ballTypes = { "chord", "tone" };
+    private string[] majorChords = { "C", "G", "D", "A", "E", "B", "Fiss", "Ciss", "F", "Bess" };
+    private string[] minorChords = { "A", "E", "B", "Fiss", "Ciss", "Giss", "Diss", "Bess", "F", "C" };
+
+    private string ballType = null;
 
     // Start is called before the first frame update
     void Start()
@@ -28,14 +33,20 @@ public class SynthBall : MonoBehaviour
             Vector2 forceVec = new Vector2(Random.Range(0f, 1f), Random.Range(0f, 1f)).normalized;
             rb.AddForce(forceVec * initialSpeed, ForceMode2D.Impulse);
         }
+        Camera camera = Camera.main;
+        camera.GetComponent<FollowBall>().SetActiveBall(gameObject);
 
         InvokeRepeating("CheckVelocity", 0f, 30f); //Clamp velocity to 10f
     }
 
-    // Update is called once per frame
-    void Update()
+    public void SetBallType(string _ballType)
     {
+        ballType = _ballType;
+    }
 
+    public string GetBallType()
+    {
+        return ballType;
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -44,45 +55,49 @@ public class SynthBall : MonoBehaviour
         //float collisionAngle = Mathf.Atan2(collision.contacts[0].normal.y, collision.contacts[0].normal.x);
         //float collisionAngleDegrees = collisionAngle * Mathf.Rad2Deg;
         //Debug.Log("Collision Angle: " + collisionAngleDegrees);
-        string collistionType = "wall";
+
 
         if (collision.gameObject.tag == "pin")
         {
-            collistionType = collision.gameObject.GetComponent<Pin>().type;
 
-        }
-
-
-        //Send collision message
-        if (collistionType == "chord")
-        {
-
-            // Calculate the direction vector from the contact point to the object's position
-            Vector2 direction = (collision.contacts[0].point - (Vector2)transform.position) * -1f;
-            direction.Normalize();
-
-            // For Debugging
-            Debug.DrawLine((Vector2)transform.position, (Vector2)transform.position + direction, Color.red, 1f);
-
-            //Calculate angle from direction vector.
-            float angle = Vector2.SignedAngle(Vector2.right, direction); //gives an angle between 0 to 180 and -180 to 0.
-
-            if (angle < 0)
+            //Send collision message
+            if (ballType == ballTypes[0]) //chord
             {
-                angle += 360;
+                float angle = CollisionAngle(collision.contacts[0]);
+
+                string chordType = majorChords[(int)Random.Range(0, majorChords.Length)];
+                string msg = "chord " + chordType + " " + angle.ToString();
+
+
+                client.Send("/collision", msg); //msg = "chord A 123.123"
+            }
+            else
+            {
+                float angle = CollisionAngle(collision.contacts[0]);
+                string msg = "tone " + angle.ToString();
+                client.Send("/collision", msg);
             }
 
-            string chordType = collision.gameObject.GetComponent<Pin>().getChord();
-            string msg = "chord " + chordType + " " + angle.ToString();
-
-
-            client.Send("/collision", msg); //msg = "chord A 123.123"
         }
-        else
+    }
+
+    private float CollisionAngle(ContactPoint2D contact)
+    {
+        Vector2 direction = (contact.point - (Vector2)transform.position) * -1f;
+        direction.Normalize();
+
+        // For Debugging
+        Debug.DrawLine((Vector2)transform.position, (Vector2)transform.position + direction, Color.red, 1f);
+
+        //Calculate angle from direction vector.
+        float angle = Vector2.SignedAngle(Vector2.right, direction); //gives an angle between 0 to 180 and -180 to 0.
+
+        if (angle < 0)
         {
-            client.Send("/collision", "tone");
+            angle += 360;
         }
 
+        return angle;
     }
 
 

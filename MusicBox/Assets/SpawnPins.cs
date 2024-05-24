@@ -38,23 +38,23 @@ public class SpawnPins : MonoBehaviour
 
             GameObject pin = Instantiate(pinPrefab, spawnPos, Quaternion.identity);
 
-            if (pin != null)
-            {
-                string randType = pinTypes[(int)Random.Range(0f, pinTypes.Length)];  
+            //if (pin != null)
+            //{
+            //    string randType = pinTypes[(int)Random.Range(0f, pinTypes.Length)];  
 
-                if (randType == pinTypes[0]) //if chord pin
-                {
-                    pin.GetComponent<Pin>().Initialize(spawnPos, 0.5f, Color.green, "chord");
-                    pin.GetComponent<Pin>().setColor();
-                    pin.GetComponent<Pin>().setChord(majorChords[(int)Random.Range(0, majorChords.Length)]);
-                }
-                else
-                {
-                    pin.GetComponent<Pin>().Initialize(spawnPos, 0.5f, Color.blue, "tone");
-                    pin.GetComponent<Pin>().setColor();
-                }
+            //    if (randType == pinTypes[0]) //if chord pin
+            //    {
+            //        pin.GetComponent<Pin>().Initialize(spawnPos, 0.5f, Color.green, "chord");
+            //        pin.GetComponent<Pin>().setColor();
+            //        pin.GetComponent<Pin>().setChord(majorChords[(int)Random.Range(0, majorChords.Length)]);
+            //    }
+            //    else
+            //    {
+            //        pin.GetComponent<Pin>().Initialize(spawnPos, 0.5f, Color.blue, "tone");
+            //        pin.GetComponent<Pin>().setColor();
+            //    }
 
-            }
+            //}
 
         }
     }

@@ -2,23 +2,30 @@ s.boot
 NetAddr.localAddr;
 
 (
-SynthDef(\bell, { arg level = 0;
+SynthDef(\tone, { arg freq=0, amp=0.3, freqCut=800;
 
-    var envelope = EnvGen.kr(Env.perc(attackTime: 0.05, releaseTime: 0.2, level: 1.0, curve: -4.0));
-    var output = SinOsc.ar(freq: 200) * envelope;
+    var filteredSig;
 
-    Out.ar(0, { output * level } ! 2);
-	DetectSilence.ar({ output * level }, doneAction: 2);
+    var env = EnvGen.kr(Env.perc(0.01, 1), doneAction: 2);
+
+    var output = RLPF.ar(Saw.ar(freq), freqCut, rq:0.5) * env;
+
+
+
+	Out.ar(0, {output * amp}!2);
 }).add;
 
 SynthDef(\chord, {
-    |freq = 440, amp = 0.1, sustain = 1|
+    | amp = 0.1, sustain = 1, f1=0, f2=0, f3=0, freqCut = 800|
     var env = EnvGen.kr(Env.perc(0.01, sustain), doneAction: 2);
-    var output = SinOsc.ar(freq) * env * amp;
-	Out.ar(0, {output}!2);
+	var sig = SinOsc.ar(f1) + SinOsc.ar(f2) + SinOsc.ar(f3) ;
+	var output = ( RLPF.ar(sig, freqCut, rq: 0.5) ) * env;
+	Out.ar(0, {output * amp}!2);
 }).add;
 
 )
+
+Synth.new(\tone, [\freq, ~currentTone.midicps]);
 
 (
 ~basicChords = [
@@ -32,7 +39,9 @@ SynthDef(\chord, {
 	[61, 65, 68], //Ciss-dur
 	[65, 69, 72], //F-dur
 	[70, 74, 77]  //Bess-dur
-]
+];
+
+~currentTone = 60;
 )
 
 (
@@ -40,93 +49,68 @@ OSCdef.new(
     \collision,
     { arg msg;
         var splitString = msg[1].asString.split($ );
-		var bChord, sustain, chordAmp, octavMap, octavMult;
+		var bChord, sustain, chordAmp, octavMap, octavMult, toneMap, toneAdd;
 
 		sustain = 3;
-		chordAmp = 0.2;
+		chordAmp = 0.1;
 
-		if(splitString[0].asString == "chord") {
+		switch (splitString[0].asString,
+			"chord", {
+				// Oktav
+				octavMap = linlin(splitString[2].asFloat, 0, 360, 0, 4).round;
+				octavMap.postln;
 
-			//Oktav
-			octavMap = linlin(splitString[2].asFloat, 0, 360, 0, 4).round;
-			octavMap.postln;
-			switch (octavMap.asInteger,
-				0, { octavMult = 0},
-				1, { octavMult = 1 },
-				2, { octavMult = 2 },
-				3, { octavMult = -1 },
-				4, { octavMult = -2 },
-
-			);
-
-			if (splitString[1].asString == "C") {
-				bChord = ~basicChords[0];
-				~playChord.((bChord + (12*octavMult)), chordAmp, sustain);
-				"C".postln;
-			} {
-				if (splitString[1].asString == "G") {
-					bChord = ~basicChords[1];
-					~playChord.((bChord + (12*octavMult)), chordAmp, sustain);
-					"G".postln;
-				} {
-					if (splitString[1].asString == "D") {
+				switch (splitString[1].asString,
+					"C", {
+						bChord = ~basicChords[0];
+					},
+					"G", {
+						bChord = ~basicChords[1];
+					},
+					"D", {
 						bChord = ~basicChords[2];
-						~playChord.((bChord + (12*octavMult)), chordAmp, sustain);
-						"D".postln;
-					} {
-						if (splitString[1].asString == "A") {
-							bChord = ~basicChords[3];
-							~playChord.((bChord + (12*octavMult)), chordAmp, sustain);
-							"A".postln;
-						} {
-							if (splitString[1].asString == "E") {
-								bChord = ~basicChords[4];
-								~playChord.((bChord + (12*octavMult)), chordAmp, sustain);
-								"E".postln;
-							} {
-								if (splitString[1].asString == "B") {
-									bChord = ~basicChords[5];
-									~playChord.((bChord + (12*octavMult)), chordAmp, sustain);
-									"B".postln;
-								} {
-									if (splitString[1].asString == "Fiss") {
-										bChord = ~basicChords[6];
-										~playChord.((bChord + (12*octavMult)), chordAmp, sustain);
-										"Fiss".postln;
-									} {
-										if (splitString[1].asString == "Ciss") {
-											bChord = ~basicChords[7];
-											~playChord.((bChord + (12*octavMult)), chordAmp, sustain);
-											"Ciss".postln;
-										} {
-											if (splitString[1].asString == "F") {
-												bChord = ~basicChords[8];
-												~playChord.((bChord + (12*octavMult)), chordAmp, sustain);
-												"F".postln;
-											} {
-												//Bess
-												bChord = ~basicChords[9];
-												~playChord.((bChord + (12*octavMult)), chordAmp, sustain);
-												"Bess".postln;
+					},
+					"A", {
+						bChord = ~basicChords[3];
+					},
+					"E", {
+						bChord = ~basicChords[4];
+					},
+					"B", {
+						bChord = ~basicChords[5];
+					},
+					"Fiss", {
+						bChord = ~basicChords[6];
+					},
+					"Ciss", {
+						bChord = ~basicChords[7];
+					},
+					"F", {
+						bChord = ~basicChords[8];
+					},
+					"Bess", {
+						bChord = ~basicChords[9];
+					},
+					{
+						// Default case
+						"Default";
+					}
+				);
 
-											};
-										};
-									};
-								};
-							};
-						};
-					};
-				};
-			};
+				~playChord.((bChord + (12 * octavMap)), chordAmp, sustain);
+				splitString[1].asString.postln;
+			},
+			"tone", {
+				// Update currentTone
+				toneMap = linlin(splitString[1].asFloat, 0, 360, -4, 4).round;
+				toneMap.postln;
 
-            "---------".postln;
-            ~playChord.([60, 64, 67], 0.1, 2);
-        } {
-            // ~playChord.([60, 64, 67], 0.1, 2);
-            Synth.new(\bell, [\level, 0.5]);
-            msg[1].postln;
-			"---------".postln;
-        };
+					Synth.new(\tone, [\freq, (~currentTone + toneMap).midicps]);
+			},
+			{
+				//Nothing
+			}
+		);
     },
     '/collision',
     nil, 12345
@@ -137,9 +121,8 @@ OSCdef.new(
 
 (
 ~playChord = { |notes, amp = 0.1, sustain = 1|
-    notes.do { |note|
-        Synth(\chord, [\freq, note.midicps, \amp, amp, \sustain, sustain]);
-    };
+	Synth(\chord, [\f1, notes[0].midicps, \f2, notes[1].midicps, \f3, notes[2].midicps, \amp, amp, \sustain, sustain]);
+
 };
 )
 (
@@ -150,6 +133,9 @@ test2.postln;
 
 
 )
-
+ServerMeter.new(s, 0, 2);
 ~playChord.(~basicChords[0], 0.1, 2);
+~playChord.(~basicChords[1], 0.1, 2);
+~playChord.(~basicChords[2], 0.1, 2);
+~playChord.(~basicChords[3], 0.1, 2);
 ~playChord.([67, 71, 74], 0.1, 2);
