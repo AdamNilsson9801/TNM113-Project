@@ -16,15 +16,83 @@ SynthDef(\tone, { arg freq=0, amp=0.3, freqCut=800;
 }).add;
 
 SynthDef(\chord, {
-    | amp = 0.1, sustain = 1, f1=0, f2=0, f3=0, freqCut = 800|
+    | amp = 0.1, sustain = 1, f1=0, f2=0, f3=0, freqCut = 1500|
     var env = EnvGen.kr(Env.perc(0.01, sustain), doneAction: 2);
 	var sig = SinOsc.ar(f1) + SinOsc.ar(f2) + SinOsc.ar(f3) ;
 	var output = ( RLPF.ar(sig, freqCut, rq: 0.5) ) * env;
 	Out.ar(0, {output * amp}!2);
 }).add;
 
+SynthDef(\bassDrum, {
+    arg t_trig = 1, amp = 0.3, freq = 38.midicps, decay = 2;
+
+    var body, attack, output;
+
+    // Generate body (sine oscillator)
+    body = SinOsc.ar(38.midicps) * EnvGen.kr(Env.perc(0.01, decay), t_trig);
+
+    // Generate attack (noise burst)
+    attack = PinkNoise.ar * EnvGen.kr(Env.perc(0.001, 0.01, 1, -8), t_trig);
+
+    // Combine body and attack
+    output = (body + attack) * amp;
+
+    // Output
+    Out.ar(0, output!2);
+}).add;
+
+SynthDef(\opHiHat, { arg t_trig = 1;
+var output, freq, noise, tones;
+
+	freq = 220;
+
+	noise = HPF.ar(WhiteNoise.ar(2), 5000);// * EnvGen.ar(Env.perc(0.01, 0.5, 1, -1));
+
+	tones = LFPulse.ar(freq: 2000, width: 0.5, mul: 0.1)
+	+ LFPulse.ar(freq: 1150, width: 0.5, mul: 0.1)
+	+ LFPulse.ar(freq: 820, width: 0.5, mul: 0.1)
+	+ LFPulse.ar(freq: 465, width: 0.5, mul: 0.1);
+
+	tones = tones / 3;//* EnvGen.ar(Env.perc(0, 0.5, 1, -4)) / 3;
+
+	output = noise + tones * EnvGen.ar(Env.perc(0, 0.9, 1, -4));
+
+	Out.ar(0, {output}!2);
+
+}).add;
+
+SynthDef(\highTom, { arg t_trig = 1;
+	var body, output, freq, pitchEnvelope;
+
+	pitchEnvelope = EnvGen.ar(Env.perc(0, 0.1, 1,-4), t_trig).range(1, 3);
+
+	body = SinOsc.ar(75 * pitchEnvelope, mul:0.4);
+	output = body * EnvGen.ar(Env.perc(0, 0.5, 1, -1), t_trig);
+
+	Out.ar(0, {output}!2);
+}).add;
+
+SynthDef(\cowBell, { arg t_trig = 1;
+var output, freq, tones;
+
+	freq = 75.midicps;
+
+	tones = LFPulse.ar(freq: freq, width: 0.5, mul: 1.0)
+	+ LFPulse.ar(freq: (82).midicps, width: 0.5, mul: 0.8);
+
+	tones = tones * EnvGen.ar(Env.perc(0, 0.5, 1, -4));
+
+	output = tones * 0.5;
+
+	Out.ar(0, {output}!2);
+}).add;
+
 )
 
+Synth.new(\highTom);
+Synth.new(\opHiHat);
+Synth.new(\bassDrum);
+Synth.new(\cowBell);
 Synth.new(\tone, [\freq, ~currentTone.midicps]);
 
 (
@@ -106,6 +174,22 @@ OSCdef.new(
 				toneMap.postln;
 
 					Synth.new(\tone, [\freq, (~currentTone + toneMap).midicps]);
+			},
+			"bass", {
+
+					Synth.new(\bassDrum);
+			},
+			"cowbell", {
+
+					Synth.new(\cowBell);
+			},
+			"hihat", {
+
+					Synth.new(\opHiHat);
+			},
+			"hightom", {
+
+					Synth.new(\highTom);
 			},
 			{
 				//Nothing

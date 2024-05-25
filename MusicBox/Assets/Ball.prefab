@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 410180540342920635}
   - component: {fileID: 9162469319514945134}
   - component: {fileID: 1201535258013748576}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Ball
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -101,7 +101,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   initialSpeed: 10
   rb: {fileID: 1201535258013748576}
-  camera: {fileID: 0}
   ipAddress: 127.0.0.1
   port: 12345
 --- !u!58 &9162469319514945134

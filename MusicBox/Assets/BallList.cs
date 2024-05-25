@@ -66,4 +66,13 @@ public class BallList : MonoBehaviour
 
         return null;
     }
+
+    public void DeleteAllBalls()
+    {
+        foreach (GameObject ball in balls)
+        {
+            Camera.main.GetComponent<FollowBall>().SetActiveBall(null);
+            Destroy(ball);
+        }
+    }
 }

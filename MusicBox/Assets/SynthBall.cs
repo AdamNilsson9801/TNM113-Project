@@ -14,11 +14,12 @@ public class SynthBall : MonoBehaviour
 
     OscClient client;
 
-    private string[] ballTypes = { "chord", "tone" };
+    private string[] ballTypes = { "chord", "tone", "bass", "cowbell", "hihat", "hightom" };
     private string[] majorChords = { "C", "G", "D", "A", "E", "B", "Fiss", "Ciss", "F", "Bess" };
     private string[] minorChords = { "A", "E", "B", "Fiss", "Ciss", "Giss", "Diss", "Bess", "F", "C" };
 
     private string ballType = null;
+    private Color color;
 
     // Start is called before the first frame update
     void Start()
@@ -42,6 +43,42 @@ public class SynthBall : MonoBehaviour
     public void SetBallType(string _ballType)
     {
         ballType = _ballType;
+        SetColorByType();
+    }
+
+    private void SetColorByType()
+    {
+        //{ "chord", "tone", "bass", "cowbell", "hihat", "hightom" };
+        if (ballType == ballTypes[0]) //chord
+        {
+            color = new Color(0.83f, 1f, 1f, 1f);
+        }
+        else if (ballType == ballTypes[1]) //tone
+        {
+            color = new Color(0.75f, 0.86f, 1f, 1f);
+        }
+        else if (ballType == ballTypes[2]) //bass
+        {
+            color = new Color(0.8f, 0.8f, 1f, 1f);
+        }
+        else if (ballType == ballTypes[3])  //cowbell
+        {
+            color = new Color(0.93f, 0.8f, 1f, 1f);
+        }
+        else if (ballType == ballTypes[4]) //hihat
+        {
+            color = new Color(1f, 0.8f, 0.98f, 1f);
+        }
+        else if (ballType == ballTypes[5]) //hightom
+        {
+            color = new Color(1f, 0.8f, 0.88f, 1f);
+        }
+        else
+        {
+            color = Color.white;
+        }
+
+        GetComponent<Renderer>().material.color = color;
     }
 
     public string GetBallType()
@@ -51,11 +88,6 @@ public class SynthBall : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-
-        //float collisionAngle = Mathf.Atan2(collision.contacts[0].normal.y, collision.contacts[0].normal.x);
-        //float collisionAngleDegrees = collisionAngle * Mathf.Rad2Deg;
-        //Debug.Log("Collision Angle: " + collisionAngleDegrees);
-
 
         if (collision.gameObject.tag == "pin")
         {
@@ -71,11 +103,27 @@ public class SynthBall : MonoBehaviour
 
                 client.Send("/collision", msg); //msg = "chord A 123.123"
             }
-            else
+            else if (ballType == ballTypes[1]) //tone
             {
                 float angle = CollisionAngle(collision.contacts[0]);
                 string msg = "tone " + angle.ToString();
                 client.Send("/collision", msg);
+            }
+            else if (ballType == ballTypes[2])
+            {
+                client.Send("/collision", "bass");
+            }
+            else if (ballType == ballTypes[3])
+            {
+                client.Send("/collision", "cowbell");
+            }
+            else if (ballType == ballTypes[4])
+            {
+                client.Send("/collision", "hihat");
+            }
+            else
+            {
+                client.Send("/collision", "hightom");
             }
 
         }
