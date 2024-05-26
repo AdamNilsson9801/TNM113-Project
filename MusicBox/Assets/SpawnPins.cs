@@ -46,4 +46,9 @@ public class SpawnPins : MonoBehaviour
             pinList.Add(pin);
         }
     }
+
+    public void ChangeNumberOfPins(UnityEngine.UI.Slider slider)
+    {
+        numberOfPins = (int)slider.value;
+    }
 }

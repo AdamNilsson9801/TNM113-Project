@@ -2,25 +2,32 @@ s.boot
 NetAddr.localAddr;
 
 (
+
+SynthDef(\compander, {
+    var input = In.ar(0, 2);
+    var output = Compander.ar(input, thresh: 0.99, slopeBelow: 2.0, clampTime: 0.01, relaxTime: 0.1);
+    ReplaceOut.ar(0, output);
+}).add;
+
 SynthDef(\tone, { arg freq=0, amp=0.3, freqCut=800;
 
     var filteredSig;
 
     var env = EnvGen.kr(Env.perc(0.01, 1), doneAction: 2);
 
-    var output = RLPF.ar(Saw.ar(freq), freqCut, rq:0.5) * env;
+    var output = RLPF.ar(Saw.ar(freq), freqCut, rq:0.5) * env * amp;
 
 
 
-	Out.ar(0, {output * amp}!2);
+	Out.ar(0, output!2);
 }).add;
 
 SynthDef(\chord, {
     | amp = 0.1, sustain = 1, f1=0, f2=0, f3=0, freqCut = 1500|
     var env = EnvGen.kr(Env.perc(0.01, sustain), doneAction: 2);
 	var sig = SinOsc.ar(f1) + SinOsc.ar(f2) + SinOsc.ar(f3) ;
-	var output = ( RLPF.ar(sig, freqCut, rq: 0.5) ) * env;
-	Out.ar(0, {output * amp}!2);
+	var output = ( RLPF.ar(sig, freqCut, rq: 0.5) ) * env * amp;
+	Out.ar(0, output!2);
 }).add;
 
 SynthDef(\bassDrum, {
@@ -57,19 +64,19 @@ var output, freq, noise, tones;
 
 	output = noise + tones * EnvGen.ar(Env.perc(0, 0.9, 1, -4));
 
-	Out.ar(0, {output}!2);
+	Out.ar(0, {output * 0.1}!2);
 
 }).add;
 
 SynthDef(\highTom, { arg t_trig = 1;
-	var body, output, freq, pitchEnvelope;
+    var body, output, freq, pitchEnvelope;
 
-	pitchEnvelope = EnvGen.ar(Env.perc(0, 0.1, 1,-4), t_trig).range(1, 3);
+    pitchEnvelope = EnvGen.ar(Env.perc(0, 0.1, 1, -4), t_trig).range(1, 3);
 
-	body = SinOsc.ar(75 * pitchEnvelope, mul:0.4);
-	output = body * EnvGen.ar(Env.perc(0, 0.5, 1, -1), t_trig);
+    body = SinOsc.ar(75 * pitchEnvelope, mul: 0.4);
+    output = body * EnvGen.ar(Env.perc(0, 0.5, 1, -1), t_trig) * 0.4;
 
-	Out.ar(0, {output}!2);
+    Out.ar(0, output!2); // Output to the effect bus
 }).add;
 
 SynthDef(\cowBell, { arg t_trig = 1;
@@ -82,20 +89,17 @@ var output, freq, tones;
 
 	tones = tones * EnvGen.ar(Env.perc(0, 0.5, 1, -4));
 
-	output = tones * 0.5;
+	output = tones * 0.1;
 
-	Out.ar(0, {output}!2);
+	Out.ar(0, output!2);
 }).add;
 
 )
 
-Synth.new(\highTom);
-Synth.new(\opHiHat);
-Synth.new(\bassDrum);
-Synth.new(\cowBell);
-Synth.new(\tone, [\freq, ~currentTone.midicps]);
 
 (
+Synth(\compander);
+
 ~basicChords = [
 	[60, 64, 67], //C-dur
 	[67, 71, 74], //G-dur
@@ -110,6 +114,12 @@ Synth.new(\tone, [\freq, ~currentTone.midicps]);
 ];
 
 ~currentTone = 60;
+
+~playChord = { |notes, amp = 0.1, sustain = 1|
+	Synth(\chord, [\f1, notes[0].midicps, \f2, notes[1].midicps, \f3, notes[2].midicps, \amp, amp, \sustain, sustain]);
+
+};
+
 )
 
 (
@@ -203,23 +213,10 @@ OSCdef.new(
 )
 
 
-(
-~playChord = { |notes, amp = 0.1, sustain = 1|
-	Synth(\chord, [\f1, notes[0].midicps, \f2, notes[1].midicps, \f3, notes[2].midicps, \amp, amp, \sustain, sustain]);
 
-};
-)
-(
-var test = ~basicChords[0];
-var test2 = ~basicChords[0] + 12;
-test.postln;
-test2.postln;
-
-
-)
 ServerMeter.new(s, 0, 2);
-~playChord.(~basicChords[0], 0.1, 2);
-~playChord.(~basicChords[1], 0.1, 2);
-~playChord.(~basicChords[2], 0.1, 2);
-~playChord.(~basicChords[3], 0.1, 2);
-~playChord.([67, 71, 74], 0.1, 2);
+Synth.new(\highTom);
+Synth.new(\opHiHat);
+Synth.new(\bassDrum);
+Synth.new(\cowBell);
+Synth.new(\tone, [\freq, ~currentTone.midicps]);
