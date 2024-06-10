@@ -10,6 +10,7 @@ public class SpawnPins : MonoBehaviour
     public int numberOfPins;
     public float distToBoundary = 2f;
 
+    private List<GameObject> pinList = new List<GameObject>();
     private float minX, maxX, minY, maxY;
 
     // Start is called before the first frame update
@@ -22,19 +23,32 @@ public class SpawnPins : MonoBehaviour
             maxY = environment.transform.GetChild(2).transform.position.y - distToBoundary;
             minY = environment.transform.GetChild(3).transform.position.y + distToBoundary;
         }
-
-        spawnPins();
     }
 
-    private void spawnPins()
+    public void spawnPins()
     {
+        if (pinList.Count != 0)
+        {
+            //Remove all pins in list
+            foreach (GameObject pin in pinList)
+            {
+                Destroy(pin);
+            }
+        }
+
         for (int i = 0; i < numberOfPins; i++)
         {
             Vector2 spawnPos = new Vector2(Random.Range(minX, maxX),
-                                            Random.Range(minY, maxY));
+                                           Random.Range(minY, maxY));
 
             GameObject pin = Instantiate(pinPrefab, spawnPos, Quaternion.identity);
+
+            pinList.Add(pin);
         }
     }
 
+    public void ChangeNumberOfPins(UnityEngine.UI.Slider slider)
+    {
+        numberOfPins = (int)slider.value;
+    }
 }
