@@ -184,6 +184,7 @@ OSCdef.new(
 				toneMap.postln;
 
 					Synth.new(\tone, [\freq, (~currentTone + toneMap).midicps]);
+				    ~currentTone = ~currentTone + toneMap;
 			},
 			"bass", {
 
